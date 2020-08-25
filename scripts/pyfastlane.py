@@ -11,6 +11,7 @@ def execute(cmd):
     print(cmd)
     os.system(cmd)
 
+
 class App:
     def __init__(self):
         config = configparser.ConfigParser()
@@ -34,31 +35,36 @@ class App:
 
         self.deliver_options = f'--force --run_precheck_before_submit false --username {self.connect_username} --team_name "{self.connect_team_name}" --submission_information \'{submission_information_string}\''
 
-
-    def doAction(self, action_name):
-        actions = {
+        self.actions = {
             'increment_build_number': self.increment_build_number,
+            'increment_patch_number': self.increment_patch_number,
             'build': self.build,
             'upload_binary': self.upload_binary,
             'upload_metadata': self.upload_metadata,
             'testflight': self.testflight,
             'submit': self.submit,
-            'release': self.release
+            'release': self.release,
+            'help': self.help
         }
 
+
+    def doAction(self, action_name):
         try:
-            action = actions[action_name]
+            action = self.actions[action_name]
             action()
         except KeyError:
             print(f'Unknown action "{action_name}"')
-            print('Available actions:')
-            for action_name in actions:
-                print(f'{action_name:25}: {actions[action_name].__doc__}')
+            self.help()
 
 
     def increment_build_number(self):
         '''Increments the build number of the project'''
         execute(f'bundle exec fastlane run increment_build_number xcodeproj:"{self.project}"')
+
+
+    def increment_patch_number(self):
+        '''Increments the patch number of the project (e.g. 3.2.x)'''
+        execute(f'bundle exec fastlane run increment_version_number bump_type:patch xcodeproj:"{self.project}"')
 
 
     def build(self):
@@ -94,11 +100,22 @@ class App:
         self.build()
         execute(f'bundle exec fastlane deliver {self.deliver_options} --submit_for_review --skip_screenshots')
 
+    def help(self):
+        '''Shows available actions'''
+        print('Available actions:')
+        actions = self.actions
+        for action_name in actions:
+            print(f'{action_name:25}: {actions[action_name].__doc__}')
+
 
 # Main
 
 app = App()
 
-for action in sys.argv[1:]:
+actions = sys.argv[1:]
+if len(actions) == 0:
+    actions  = ['help']
+
+for action in actions:
     app.doAction(action)
 
