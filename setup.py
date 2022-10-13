@@ -11,7 +11,7 @@ setup(name='pyfastlane',
             'scripts/pyfastlane.py',
       ],
       packages=['pyfastlane'],
-      package_dir={"":"scripts"}
+      package_dir={"":"scripts"},
       install_requires=[
       ],
       zip_safe=False)
